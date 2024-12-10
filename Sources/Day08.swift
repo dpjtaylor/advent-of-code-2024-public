@@ -9,7 +9,7 @@ public enum Day08 {
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-            -1
+            data.grid.findAntinodesWithHarmonics(for: data.antennas).count
         }
     }
 }
@@ -23,33 +23,37 @@ extension String {
     }
 }
 
+private func inverted(_ diff: (xDiff: Int, yDiff: Int)) -> (Int, Int) {
+    (-diff.xDiff, -diff.yDiff)
+}
+
 extension Coordinates {
     func findAntinodes(with coordinates: Coordinates) -> [Coordinates] {
+        let diff = diff(with: coordinates)
+        return [
+            project(diff),
+            coordinates.project(inverted(diff))
+        ]
+    }
+
+    func diff(with coordinates: Coordinates) -> (xDiff: Int, yDiff: Int) {
         let minX = min(x, coordinates.x)
         let maxX = max(x, coordinates.x)
         let minY = min(y, coordinates.y)
         let maxY = max(y, coordinates.y)
 
-        let xDiff = maxX - minX
-        let yDiff = maxY - minY
-        let xModifier = x > coordinates.x ? 1 : -1
-        let yModifier = y > coordinates.y ? 1 : -1
+        let xDiff = (maxX - minX) * (x > coordinates.x ? 1 : -1)
+        let yDiff = (maxY - minY) * (y > coordinates.y ? 1 : -1)
+        return (xDiff, yDiff)
+    }
 
-        return [
-            Coordinates(
-                x: x + (xModifier * xDiff),
-                y: y + (yModifier * yDiff)
-            ),
-            Coordinates(
-                x: coordinates.x + (-xModifier * xDiff),
-                y: coordinates.y + (-yModifier * yDiff)
-            )
-        ]
+    func project(_ diff: (xDiff: Int, yDiff: Int)) -> Coordinates {
+        Coordinates(x: x + diff.xDiff, y: y + diff.yDiff)
     }
 }
 
 extension Array where Element == [Character] {
-    func coordinates(for antenna: Character) -> [Coordinates] {
+    func findCoordinates(for antenna: Character) -> [Coordinates] {
         var coordinates: [Coordinates] = []
         walk { x, y, char in
             if char == antenna {
@@ -59,8 +63,18 @@ extension Array where Element == [Character] {
         return coordinates
     }
 
+    func findHarmonics(from coordinates: Coordinates, diff: (xDiff: Int, yDiff: Int)) -> Set<Coordinates> {
+        var nextCoordinates = coordinates.project(diff)
+        var harmonicCoordinates: Set<Coordinates> = [coordinates]
+        while(isInsideGrid(nextCoordinates)) {
+            harmonicCoordinates.insert(nextCoordinates)
+            nextCoordinates = nextCoordinates.project(diff)
+        }
+        return harmonicCoordinates
+    }
+
     func findAntinodes(for antenna: Character) -> Set<Coordinates> {
-        let antennaCoordinates = coordinates(for: antenna)
+        let antennaCoordinates = findCoordinates(for: antenna)
         var antinodes = Set<Coordinates>()
         for coordinate in antennaCoordinates {
             let otherCoordinates = antennaCoordinates.filter { $0 != coordinate }
@@ -75,6 +89,32 @@ extension Array where Element == [Character] {
         var antinodes = Set<Coordinates>()
         antennas.forEach { antenna in
             antinodes = antinodes.union(findAntinodes(for: antenna))
+        }
+        return antinodes
+    }
+
+    func findAntinodesWithHarmonics(between coordinates: Coordinates, and other: Coordinates) -> Set<Coordinates> {
+        let diff = coordinates.diff(with: other)
+        return findHarmonics(from: coordinates, diff: diff)
+            .union(findHarmonics(from: other, diff: inverted(diff)))
+    }
+
+    func findAntinodesWithHarmonics(for antennas: Set<Character>) -> Set<Coordinates> {
+        var antinodes = Set<Coordinates>()
+        antennas.forEach { antenna in
+            antinodes = antinodes.union(findAntinodesWithHarmonics(for: antenna))
+        }
+        return antinodes
+    }
+
+    func findAntinodesWithHarmonics(for antenna: Character) -> Set<Coordinates> {
+        let antennaCoordinates = findCoordinates(for: antenna)
+        var antinodes = Set<Coordinates>()
+        for coordinate in antennaCoordinates {
+            let otherCoordinates = antennaCoordinates.filter { $0 != coordinate }
+            otherCoordinates.forEach { other in
+                antinodes = antinodes.union(findAntinodesWithHarmonics(between: coordinate, and: other))
+            }
         }
         return antinodes
     }
