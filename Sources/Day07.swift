@@ -78,7 +78,6 @@ struct CalibrationEquation {
     }
 
     var canBeMadeTrue: Bool {
-        var results = [Int]()
         for combination in operatorCombinations {
             var result = operators[0]
             for (index, char) in combination.enumerated() {
@@ -92,8 +91,10 @@ struct CalibrationEquation {
                     result = result * operators[index + 1]
                 }
             }
-            results.append(result)
+            if result == testValue {
+                return true
+            }
         }
-        return results.contains(testValue)
+        return false
     }
 }
