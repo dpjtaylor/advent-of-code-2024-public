@@ -61,4 +61,16 @@ extension Array where Element == [Character] {
             print(rowString)
         }
     }
+
+    func isInsideGrid(_ coordinates: Coordinates) -> Bool {
+        !coordinates.isOutsideOfGrid(maxX: maxX, maxY: maxY)
+    }
+
+    var maxX: Int {
+        self[0].count - 1
+    }
+
+    var maxY: Int {
+        self.count - 1
+    }
 }

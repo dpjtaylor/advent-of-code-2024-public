@@ -52,8 +52,8 @@ extension String {
     var characterGridXmasAs: [GridCharacter] {
         var charGrid = [GridCharacter]()
         let grid = self.grid
-        let maxX = grid[0].count - 1
-        let maxY = grid.count - 1
+        let maxX = grid.maxX
+        let maxY = grid.maxY
 
         for (y, row) in grid.enumerated() {
             for (x, char) in row.enumerated() where char == "A" {
