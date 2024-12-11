@@ -53,16 +53,6 @@ extension Coordinates {
 }
 
 extension Array where Element == [Character] {
-    func findCoordinates(for antenna: Character) -> [Coordinates] {
-        var coordinates: [Coordinates] = []
-        walk { x, y, char in
-            if char == antenna {
-                coordinates.append(Coordinates(x: x, y: y))
-            }
-        }
-        return coordinates
-    }
-
     func findHarmonics(from coordinates: Coordinates, diff: (xDiff: Int, yDiff: Int)) -> Set<Coordinates> {
         var nextCoordinates = coordinates.project(diff)
         var harmonicCoordinates: Set<Coordinates> = [coordinates]

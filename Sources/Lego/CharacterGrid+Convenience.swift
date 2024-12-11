@@ -1,6 +1,16 @@
 import Foundation
 
 extension Array where Element == [Character] {
+    func findCoordinates(for character: Character) -> [Coordinates] {
+        var coordinates: [Coordinates] = []
+        walk { x, y, char in
+            if char == character {
+                coordinates.append(Coordinates(x: x, y: y))
+            }
+        }
+        return coordinates
+    }
+
     func walk(performing action: (_ x: Int, _ y: Int, _ char: Character) -> Void) {
         for (y, row) in enumerated() {
             for (x, char) in row.enumerated() {
