@@ -9,7 +9,7 @@ public enum Day09 {
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-            -1
+            data.diskmapBlocks.defragmentedWholeFiles.checksum
         }
     }
 }
@@ -25,6 +25,30 @@ extension Array where Element == Int {
             }
         }
         return stringValue
+    }
+
+    func attemptToMoveFile(_ fileNumber: Int, in diskmap: [Int]) -> [Int] {
+        var copy = diskmap
+        if let firstIndex = firstIndex(of: fileNumber),
+           let lastIndex = lastIndex(of: fileNumber),
+           let emptyRange = copy.firstRange(of: Array(repeating: -1, count: lastIndex + 1 - firstIndex)),
+            emptyRange.startIndex < firstIndex {
+            let rangeLength = lastIndex - firstIndex + 1
+            let file = Array(repeating: fileNumber, count: rangeLength)
+            copy.replaceSubrange(firstIndex...lastIndex, with: Array(repeating: -1, count: rangeLength))
+            let replaceEndIndex = emptyRange.first! + rangeLength - 1
+            copy.replaceSubrange(emptyRange.first!...replaceEndIndex, with: file)
+        }
+        return copy
+    }
+
+    var defragmentedWholeFiles: [Int] {
+        var defragmented = self
+        let fileNumbers = Array(Set<Int>(self).subtracting([-1])).sorted()
+        for fileNumber in fileNumbers.reversed() {
+            defragmented = attemptToMoveFile(fileNumber, in: defragmented)
+        }
+        return defragmented
     }
 
     var defragmented: [Int] {
