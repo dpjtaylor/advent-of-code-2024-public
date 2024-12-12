@@ -5,7 +5,7 @@ public enum Day10 {
         static func solve(_ data: String) -> Int {
             let grid = data.grid
             let peakCoordinates = grid.findCoordinates(for: "9")
-            return data.grid.trailheads.map { coordinate in
+            return grid.trailheads.map { coordinate in
                 let paths = grid.paths(for: coordinate)
                 let trailheadScore = peakCoordinates.filter { coordinates in
                     !paths.filter { $0.contains(coordinates)}.isEmpty
@@ -17,7 +17,10 @@ public enum Day10 {
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-            -1
+            let grid = data.grid
+            return grid.trailheads
+                .map { grid.paths(for: $0).count }
+                .reduce(0, +)
         }
     }
 }
