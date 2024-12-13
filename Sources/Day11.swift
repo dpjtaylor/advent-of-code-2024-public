@@ -3,13 +3,13 @@ import Foundation
 public enum Day11 {
     public enum Part1 {
         static func solve(_ data: String) -> Int {
-            data.stones.blink(repeating: 25).count
+            data.stones.blink(repeats: 25)
         }
     }
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-           -1
+            data.stones.blink(repeats: 75)
         }
     }
 }
@@ -23,33 +23,44 @@ private extension String {
 }
 
 extension Array where Element == Int {
-    func blink(repeating times: Int) -> [Int] {
-        var result = self
-        for _ in 0..<times {
-            result = result.blink
+    func blink(repeats: Int) -> Int {
+        var memo = [String: Int]()
+        return reduce(0) { partialResult, number in
+            partialResult + number.blink(memo: &memo, repeats: repeats)
         }
-        return result
-    }
-
-    var blink: [Int] {
-        flatMap(\.blink)
     }
 }
 
 extension Int {
-    var blink: [Int] {
-        let digits = self.digits
-        return if self == 0 {
-            [1]
+    func blink(memo: inout [String: Int], repeats: Int) -> Int {
+        if repeats == 0 {
+            return 1
+        }
+        if let stoneCount = memo[lookupKey(repeats: repeats)] {
+            return stoneCount
+        }
+        let stoneCount: Int
+        if self == 0 {
+            stoneCount = 1.blink(memo: &memo, repeats: repeats - 1)
         } else if digits % 2 == 0 {
-            [
-                Int(String(String(self).prefix(digits / 2)))!,
-                Int(String(String(self).suffix(digits / 2)))!
-            ]
+            stoneCount = leftStone.blink(memo: &memo, repeats: repeats - 1) + rightStone.blink(memo: &memo, repeats: repeats - 1)
+        } else {
+            stoneCount = (2024 * self).blink(memo: &memo, repeats: repeats - 1)
         }
-        else {
-            [self * 2024]
-        }
+        memo[lookupKey(repeats: repeats)] = stoneCount
+        return stoneCount
+    }
+
+    var leftStone: Int {
+        Int(String(String(self).prefix(digits / 2)))!
+    }
+
+    var rightStone: Int {
+        Int(String(String(self).suffix(digits / 2)))!
+    }
+
+    func lookupKey(repeats: Int) -> String {
+        "\(self) \(repeats)"
     }
 
     var digits: Int {
