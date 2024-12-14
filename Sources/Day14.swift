@@ -143,25 +143,8 @@ struct RobotState: Equatable {
     let yVelocity: Int
 
     func position(after seconds: Int, gridWidth: Int, gridHeight: Int) -> Coordinates {
-        let xShift = seconds * xVelocity
-        let yShift = seconds * yVelocity
-        let newX: Int
-        if coordinates.x + xShift < 0 {
-            let xMultiplier = Int((Double(abs(coordinates.x + xShift)) / Double(gridWidth)).rounded(.up))
-            newX = coordinates.x + xShift + xMultiplier * gridWidth
-        } else {
-            let xMultiplier = Int((Double(abs(coordinates.x + xShift)) / Double(gridWidth)).rounded(.down))
-            newX = coordinates.x + xShift - xMultiplier * gridWidth
-        }
-
-        let newY: Int
-        if coordinates.y + yShift < 0 {
-            let yMultiplier = Int((Double(abs(coordinates.y + yShift)) / Double(gridHeight)).rounded(.up))
-            newY = coordinates.y + yShift + yMultiplier * gridHeight
-        } else {
-            let yMultiplier = Int((Double(abs(coordinates.y + yShift)) / Double(gridHeight)).rounded(.down))
-            newY = coordinates.y + yShift - yMultiplier * gridHeight
-        }
+        let newX = (((coordinates.x + seconds * xVelocity) % gridWidth) + gridWidth) % gridWidth
+        let newY = (((coordinates.y + seconds * yVelocity) % gridHeight) + gridHeight) % gridHeight
         return Coordinates(x: newX, y: newY)
     }
 }
