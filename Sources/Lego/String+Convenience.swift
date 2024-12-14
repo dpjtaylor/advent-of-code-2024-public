@@ -5,6 +5,11 @@ extension String {
         split(whereSeparator: \.isNewline).map { String($0) }
     }
 
+    var splitByEmptyLines: [String] {
+        split(separator: "\n\n")
+            .map(String.init)
+    }
+
     func intComponents() -> [Int] {
         split(whereSeparator: \.isWhitespace)
             .map(String.init)
