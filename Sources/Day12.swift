@@ -11,7 +11,9 @@ public enum Day12 {
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-            -1
+            data.gardenRegions
+                .map(\.discountedPrice)
+                .reduce(0, +)
         }
     }
 }
@@ -81,6 +83,10 @@ extension Set where Element == GardenPlot {
         count
     }
 
+    var discountedPrice: Int {
+        area * map(\.borderCoordinates).flatMap(\.self).edgeCount
+    }
+
     var price: Int {
         area * perimeter
     }
@@ -120,8 +126,18 @@ struct GardenRegion: Equatable, Hashable {
     let type: Character
     var plots: Set<GardenPlot>
 
+    var discountedPrice: Int {
+        plots.discountedPrice
+    }
+
     var price: Int {
         plots.price
+    }
+
+    var sides: Int {
+        plots.map(\.borderCoordinates)
+            .flatMap(\.self)
+            .edgeCount
     }
 }
 
@@ -140,6 +156,27 @@ extension GardenRegion {
     }
 }
 
+struct GardenEdge {
+    let coordinates: Coordinates
+    let direction: Character
+
+    var isNorth: Bool {
+        direction == "N"
+    }
+
+    var isEast: Bool {
+        direction == "E"
+    }
+
+    var isSouth: Bool {
+        direction == "S"
+    }
+
+    var isWest: Bool {
+        direction == "W"
+    }
+}
+
 struct GardenPlot: Equatable, Hashable {
     let type: Character
     let coordinates: Coordinates
@@ -151,6 +188,23 @@ struct GardenPlot: Equatable, Hashable {
     var borderEdges: Int {
         neighbours.filter { $0 != type }.count
         + gardenEdges
+    }
+
+    var borderCoordinates: [GardenEdge] {
+        var coords: [GardenEdge] = []
+        if north != type {
+            coords.append(GardenEdge(coordinates: northCoordinates, direction: "N"))
+        }
+        if south != type {
+            coords.append(GardenEdge(coordinates: southCoordinates, direction: "S"))
+        }
+        if east != type {
+            coords.append(GardenEdge(coordinates: eastCoordinates, direction: "E"))
+        }
+        if west != type {
+            coords.append(GardenEdge(coordinates: westCoordinates, direction: "W"))
+        }
+        return coords
     }
 
     var gardenEdges: Int {
@@ -180,5 +234,69 @@ struct GardenPlot: Equatable, Hashable {
 
     var westCoordinates: Coordinates {
         Coordinates(x: coordinates.x - 1, y: coordinates.y)
+    }
+}
+
+extension Array where Element == GardenEdge {
+    var edgeCount: Int {
+        northEdgeCount + southEdgeCount + eastEdgeCount + westEdgeCount
+    }
+
+    var northEdgeCount: Int {
+        northSouthEdgeCount(\.isNorth)
+    }
+
+    var southEdgeCount: Int {
+        northSouthEdgeCount(\.isSouth)
+    }
+
+    var eastEdgeCount: Int {
+        eastWestEdgeCount(\.isEast)
+    }
+
+    var westEdgeCount: Int {
+        eastWestEdgeCount(\.isWest)
+    }
+
+    func northSouthEdgeCount(_ edgeFilter: (GardenEdge) -> Bool) -> Int {
+        let edges = filter { edgeFilter($0) }.map(\.coordinates)
+
+        let uniqueYs = Set(edges.map(\.y))
+
+        var edgeCount = 0
+        for y in uniqueYs {
+            let orderedXs = edges.filter { $0.y == y }.map(\.x).sorted()
+            var previousX = orderedXs.first!
+            edgeCount += 1
+            for x in orderedXs {
+                if x == previousX { continue }
+                if x != previousX + 1 {
+                    edgeCount += 1
+                }
+                previousX = x
+            }
+        }
+        return edgeCount
+    }
+
+    func eastWestEdgeCount(_ edgeFilter: (GardenEdge) -> Bool) -> Int {
+        let edges = filter { edgeFilter($0) }.map(\.coordinates)
+
+        let uniqueXs = Set(edges.map(\.x))
+
+        var edgeCount = 0
+        for x in uniqueXs {
+            let orderedYs = edges.filter { $0.x == x }.map(\.y).sorted()
+            var previousY = orderedYs.first!
+            edgeCount += 1
+            for y in orderedYs {
+                if y == previousY { continue }
+                if y != previousY + 1 {
+                    edgeCount += 1
+                }
+                previousY = y
+            }
+        }
+        return edgeCount
     }
 }
