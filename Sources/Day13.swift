@@ -56,7 +56,7 @@ struct ClawConfig: Equatable {
 
     // Thanks to https://javorszky.co.uk/2024/12/13/advent-of-code-2024-day-13/ for the example normalising the equations to eliminate a factor.
     //
-    // Goal: remove aTaps from the pair of equations so we can
+    // Goal: remove bTaps from the pair of equations so we can
     //       determine aTaps without needing to know bTaps
     //
     // These two linear equations must both be true for a valid combination of A and B taps:
