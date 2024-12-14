@@ -3,8 +3,8 @@ import Foundation
 public enum Day13 {
     public enum Part1 {
         static func solve(_ data: String) -> Int {
-            data.extractClawData
-                .map { $0.options(maxTaps: 100) }
+            data.extractClawData()
+                .map { $0.options(maxTaps: 100) } // retained the part 1 version for posterity (a reminder there are better ways!)
                 .compactMap(\.minCost)
                 .reduce(0, +)
         }
@@ -12,7 +12,10 @@ public enum Day13 {
 
     public enum Part2 {
         static func solve(_ data: String) -> Int {
-           -1
+            data.extractClawData(prizeOffset: 10_000_000_000_000)
+                .compactMap(\.winningTaps)
+                .map(\.cost)
+                .reduce(0, +)
         }
     }
 }
@@ -34,10 +37,58 @@ struct ClawConfig: Equatable {
     let buttonA: ButtonConfig
     let buttonB: ButtonConfig
     let prizeLocation: Coordinates
+    let prizeOffset: Int
 
-    func bTaps(for aTaps: Int) -> Int? {
-        let xTapsNeeded = Int(exactly: (Double(prizeLocation.x) - Double(buttonA.x * aTaps)) / Double(buttonB.x))
-        let yTapsNeeded = Int(exactly: (Double(prizeLocation.y) - Double(buttonA.y * aTaps)) / Double(buttonB.y))
+    init(buttonA: ButtonConfig, buttonB: ButtonConfig, prizeLocation: Coordinates, prizeOffset: Int = 0) {
+        self.buttonA = buttonA
+        self.buttonB = buttonB
+        self.prizeLocation = prizeLocation
+        self.prizeOffset = prizeOffset
+    }
+
+    var prizeX: Int {
+        prizeLocation.x + prizeOffset
+    }
+
+    var prizeY: Int {
+        prizeLocation.y + prizeOffset
+    }
+
+    // Thanks to https://javorszky.co.uk/2024/12/13/advent-of-code-2024-day-13/ for the example normalising the equations to eliminate a factor.
+    //
+    // Goal: remove aTaps from the pair of equations so we can
+    //       determine aTaps without needing to know bTaps
+    //
+    // These two linear equations must both be true for a valid combination of A and B taps:
+    //     aX * aTaps + bX * bTaps = prizeX
+    //     aY * aTaps + bY * bTaps = prizeY
+    //
+    // Multiply the 1st equation by the B button y-value and the 2nd equation by the B button x-value. This enables us to subtract one equation from the other to remove bTaps from the equation:
+    //     bY * (aX * aTaps + bX * bTaps) = prizeX * bY
+    //     bX * (aY * aTaps + bY * bTaps) = prizeY * bX
+    //
+    // Expand:
+    //     bY * aX * aTaps + bY * bX * bTaps = prizeX * bY
+    //     bX * aY * aTaps + bX * bY * bTaps = prizeY * bX
+    //
+    // Subtract one equation from the other:
+    //     bY * aX * aTaps + bY * bX * bTaps - bX * aY * aTaps - bX * bY * bTaps = prizeX * bY - prizeY * bX
+    //
+    // (bY * bX * bTaps) cancels itself out:
+    //     bY * aX * aTaps - bX * aY * aTaps = prizeX * bY - prizeY * bX
+    //
+    // Isolate aTaps:
+    //     aTaps * (by * aX - bX * aY) = prizeX * bY - prizeY *bX
+    //
+    // Rearrange -> now aTaps can be calculated from known values:
+    //     aTaps = (prizeX * bY - prizeY *bX) / (by * aX - bX * aY)
+    func aTaps() -> Int {
+        (prizeX * buttonB.y - prizeY * buttonB.x) / (buttonB.y * buttonA.x - buttonB.x * buttonA.y)
+    }
+
+    func bTaps(for aTaps: Int, offset: Int = 0) -> Int? {
+        let xTapsNeeded = Int(exactly: (Double(prizeX + offset) - Double(buttonA.x * aTaps)) / Double(buttonB.x))
+        let yTapsNeeded = Int(exactly: (Double(prizeY + offset) - Double(buttonA.y * aTaps)) / Double(buttonB.y))
 
         if xTapsNeeded == nil || yTapsNeeded == nil {
             return nil
@@ -48,10 +99,20 @@ struct ClawConfig: Equatable {
         return nil
     }
 
-    func options(maxTaps: Int) -> [ClawOption] {
+    // Part 2 version
+    var winningTaps: ClawOption? {
+        let aTaps = aTaps()
+        if let bTaps = bTaps(for: aTaps) {
+            return ClawOption(aTaps: aTaps, bTaps: bTaps)
+        }
+        return nil
+    }
+
+    // Part 1 version
+    func options(maxTaps: Int, offset: Int = 0) -> [ClawOption] {
         var options = [ClawOption]()
         for a in 0...maxTaps {
-            if let b = bTaps(for: a) {
+            if let b = bTaps(for: a, offset: offset) {
                 options.append(ClawOption(aTaps: a, bTaps: b))
             }
         }
@@ -60,25 +121,14 @@ struct ClawConfig: Equatable {
 }
 
 extension Array where Element == ClawOption {
+    // Part 1 version
     var minCost: Int? {
         sorted(by: { $0.cost < $1.cost }).first?.cost
     }
 }
 
-// Button A: X+94, Y+34
-// Button B: X+22, Y+67
-// Prize: X=8400, Y=5400
-
-// cost = 3a +b
-
-// a(94x + 34y) + b(22x + 67y) = 8400x + 5400y
-// 94a + 22b = 8400 && 34a + 67b = 5400
-
-// 1 * 34 + 67b = 5400
-// b = 5400 - 34 / 67 -> not a whole number
-
 extension String {
-    var extractClawData: [ClawConfig] {
+    func extractClawData(prizeOffset: Int = 0) -> [ClawConfig] {
         let rawData = splitByEmptyLines
 
         var clawConfig = [ClawConfig]()
@@ -88,7 +138,8 @@ extension String {
                 ClawConfig(
                     buttonA: lines[0].buttonConfig(cost: 3),
                     buttonB: lines[1].buttonConfig(cost: 1),
-                    prizeLocation: lines[2].prizeLocation
+                    prizeLocation: lines[2].prizeLocation,
+                    prizeOffset: prizeOffset
                 )
             )
         }
