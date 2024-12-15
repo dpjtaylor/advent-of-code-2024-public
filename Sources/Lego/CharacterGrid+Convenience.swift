@@ -1,16 +1,6 @@
 import Foundation
 
 extension Array where Element == [Character] {
-    func findCoordinates(for character: Character) -> [Coordinates] {
-        var coordinates: [Coordinates] = []
-        walk { x, y, char in
-            if char == character {
-                coordinates.append(Coordinates(x: x, y: y))
-            }
-        }
-        return coordinates
-    }
-
     func walk(performing action: (_ x: Int, _ y: Int, _ char: Character) -> Void) {
         for (y, row) in enumerated() {
             for (x, char) in row.enumerated() {
@@ -50,6 +40,18 @@ extension Array where Element == [Character] {
         return rotatedGrid
     }
 
+    var toString: String {
+        var string = ""
+        for row in self {
+            for char in row {
+                string += String(char)
+            }
+            string += "\n"
+        }
+        string.removeLast() // trail "\n"
+        return string
+    }
+
     var toStringArray: [String] {
         var strings = [String]()
         for row in self {
@@ -70,10 +72,6 @@ extension Array where Element == [Character] {
             }
             print(rowString)
         }
-    }
-
-    func isInsideGrid(_ coordinates: Coordinates) -> Bool {
-        !coordinates.isOutsideOfGrid(maxX: maxX, maxY: maxY)
     }
 
     var maxX: Int {
