@@ -8,7 +8,7 @@ public enum Day10 {
             return grid.trailheads.map { coordinate in
                 let paths = grid.paths(for: coordinate)
                 let trailheadScore = peakCoordinates.filter { coordinates in
-                    !paths.filter { $0.contains(coordinates)}.isEmpty
+                    !paths.filter { $0.contains(coordinates) }.isEmpty
                 }.count
                 return trailheadScore
             }.reduce(0, +)

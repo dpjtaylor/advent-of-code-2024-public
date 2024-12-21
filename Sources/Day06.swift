@@ -25,7 +25,7 @@ private extension Character {
 
 extension Array where Element == [Character] {
     var firstStep: DirectedStep {
-        DirectedStep(direction: .up, coordinates: startCoordinates)
+        DirectedStep(direction: .north, to: startCoordinates)
     }
 
     var startCoordinates: Coordinates {
@@ -105,42 +105,12 @@ extension Array where Element == [Character] {
             return nextStep(
                 from: DirectedStep(
                 direction: newDirection,
-                coordinates: step.coordinates)
+                to: step.coordinates)
             )
         }
         return DirectedStep(
             direction: step.direction,
-            coordinates: targetCoordinates
+            to: targetCoordinates
         )
-    }
-}
-
-struct DirectedStep: Equatable, Hashable {
-    let direction: Direction
-    let coordinates: Coordinates
-
-    var targetCoordinates: Coordinates {
-        switch direction {
-        case .up: Coordinates(x: coordinates.x, y: coordinates.y - 1)
-        case .down: Coordinates(x: coordinates.x, y: coordinates.y + 1)
-        case .left: Coordinates(x: coordinates.x - 1, y: coordinates.y)
-        case .right: Coordinates(x: coordinates.x + 1, y: coordinates.y)
-        }
-    }
-}
-
-enum Direction: Equatable, Hashable {
-    case up
-    case down
-    case left
-    case right
-
-    var turnRight: Direction {
-        switch self {
-        case .up: .right
-        case .right: .down
-        case .down: .left
-        case .left: .up
-        }
     }
 }
