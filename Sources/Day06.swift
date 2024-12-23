@@ -59,15 +59,15 @@ extension Array where Element == [Character] {
         var testedObstacleCoordinates: Set<Coordinates> = []
         let firstStep = firstStep
         walkRoute { step in
-            if step.coordinates != firstStep.coordinates &&
-                self[step.coordinates.y][step.coordinates.x] != Character.obstacle &&
-                !testedObstacleCoordinates.contains(step.coordinates) {
+            if step.to != firstStep.to &&
+                self[step.to.y][step.to.x] != Character.obstacle &&
+                !testedObstacleCoordinates.contains(step.to) {
                 var gridCopy = self
-                gridCopy[step.coordinates.y][step.coordinates.x] = Character.obstacle
+                gridCopy[step.to.y][step.to.x] = Character.obstacle
                 if gridCopy.hasLoop(firstStep: firstStep) {
                     loopCount += 1
                 }
-                testedObstacleCoordinates.insert(step.coordinates)
+                testedObstacleCoordinates.insert(step.to)
             }
         }
         return loopCount
@@ -87,9 +87,9 @@ extension Array where Element == [Character] {
     }
 
     var visitedCoordinatesCount: Int {
-        var visited: Set<Coordinates> = [firstStep.coordinates]
+        var visited: Set<Coordinates> = [firstStep.to]
         walkRoute { step in
-            visited.insert(step.coordinates)
+            visited.insert(step.to)
         }
         return visited.count
     }
@@ -105,7 +105,7 @@ extension Array where Element == [Character] {
             return nextStep(
                 from: DirectedStep(
                 direction: newDirection,
-                to: step.coordinates)
+                to: step.to)
             )
         }
         return DirectedStep(

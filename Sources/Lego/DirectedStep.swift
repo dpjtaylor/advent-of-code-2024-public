@@ -3,13 +3,13 @@ import Foundation
 struct DirectedStep: Equatable, Hashable, Comparable {
     let direction: Direction
     let from: Coordinates
-    let coordinates: Coordinates // TODO: refactor to 'to:'
+    let to: Coordinates
     let score: Int
 
     init(direction: Direction, from: Coordinates = Coordinates(x: 0, y: 0), to coordinates: Coordinates, score: Int = 0) {
         self.direction = direction
         self.from = from
-        self.coordinates = coordinates
+        self.to = coordinates
         self.score = score
     }
 
@@ -18,7 +18,7 @@ struct DirectedStep: Equatable, Hashable, Comparable {
     }
 
     var targetCoordinates: Coordinates {
-        coordinates.move(direction)
+        to.move(direction)
     }
 
     var north: DirectedStep { move(.north) }
@@ -27,7 +27,7 @@ struct DirectedStep: Equatable, Hashable, Comparable {
     var west: DirectedStep { move(.west) }
 
     func move(_ direction: Direction) -> DirectedStep {
-        DirectedStep(direction: direction, from: coordinates, to: coordinates.move(direction))
+        DirectedStep(direction: direction, from: to, to: to.move(direction))
     }
 }
 
