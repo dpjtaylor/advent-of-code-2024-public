@@ -61,7 +61,6 @@ struct ChronospatialComputer {
         var updatedState = self
         while updatedState.instructionPointer < program.count {
             updatedState = updatedState.processNextInstruction()
-            print("pointer: \(updatedState.instructionPointer), program count: \(program.count)")
         }
         return updatedState
     }
